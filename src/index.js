@@ -74,5 +74,7 @@ app.use((_req, res) => res.status(404).json({ error: 'not_found' }));
 app.use((_err, _req, res, _next) => res.status(400).json({ error: 'bad_request' }));
 
 await redis.connect(); // no Redis at boot = no start (fail closed)
-await loadSigningKey(redis);
+const pub = await loadSigningKey(redis);
+// The PUBLIC half only (safe to show): paste it into the main API's MCP_PUBLIC_KEY in Railway.
+console.log(`MCP public key (api.backx.trade → MCP_PUBLIC_KEY): ${pub}`);
 app.listen(config.port, () => console.log(`mcp.backx.trade on :${config.port}`));
