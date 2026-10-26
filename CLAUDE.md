@@ -16,6 +16,8 @@ The BackX MCP server only. The owner is not a developer: explain briefly, in Nor
 
 ## Security (locked)
 - Only social-login accounts may connect; the API decides (Privy linked accounts, never the client).
+- Admin pause (owner 2026-10-26): the API's `status` op says whether BackX paused MCP (Admin → Users); `/mcp` refuses
+  every call while paused (cached 15 s, unreachable API = last answer, none = paused: fail closed).
 - This server never signs a transaction and never holds a private key. Prepared steps are signed by the user on
   app.backx.trade/sign after the API's independent check (only BackX contracts, own wallet).
 - No access to the main database, main Redis, Privy secret or ADMIN_WALLETS. Its own ed25519 key lives only in its

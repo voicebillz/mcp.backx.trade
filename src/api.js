@@ -18,5 +18,22 @@ export async function internal(op, body) {
   return r.json();
 }
 
+/**
+ * Has BackX paused MCP (admin switch on api.backx.trade)? Asked at most every 15 s. If the API cannot be reached the
+ * last answer (kept 1 h) is used, and with no answer at all we treat it as paused: fail closed.
+ */
+export async function paused(redis) {
+  const hit = await redis.get('mcp:paused');
+  if (hit != null) return hit === '1';
+  try {
+    const { paused: p } = await internal('status', {});
+    await redis.multi().set('mcp:paused', p ? '1' : '0', 'EX', 15).set('mcp:paused:last', p ? '1' : '0', 'EX', 3600).exec();
+    return !!p;
+  } catch {
+    const last = await redis.get('mcp:paused:last');
+    return last == null ? true : last === '1';
+  }
+}
+
 /** Is this account still allowed (social login, embedded wallet) and what is its wallet? */
 export const account = (sub) => internal('account', { sub });
