@@ -1,0 +1,22 @@
+{
+  "name": "mcp-backx-trade",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BackX MCP server (mcp.backx.trade): a user's own AI assistant on their own BackX account.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "express": "5.2.1",
+    "ioredis": "5.4.2",
+    "jose": "6.2.11",
+    "viem": "2.57.6",
+    "zod": "4.6.7"
+  }
+}
