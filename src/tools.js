@@ -307,11 +307,11 @@ export function buildServer(auth, redis) {
   }));
 
   server.registerTool('proposal_signal', {
-    title: 'Signal on a BackX Proposal', description: 'Signal Yes or No on a BackX Proposal for the user\'s own account. Only do this when the user clearly told you which answer they want. One signal per account, changeable while the proposal is open.',
+    title: 'Signal on a BackX Proposal', description: 'Signal Yes or No on a BackX Proposal for the user\'s own account. Only do this when the user clearly told you which answer they want. One signal per account and it is final: it cannot be changed or taken back, so confirm the answer with the user first.',
     inputSchema: { choice: z.enum(['yes', 'no']), id: z.number().int().min(1).optional().describe('BXP number; omit for the latest open one') },
   }, guard('proposal:signal', auth, async ({ choice, id }) => {
     const r = await internalOp('proposal_signal', { sub: auth.sub, id: id ?? null, choice });
-    if (r.error) return fail(r.error === 'closed' ? 'This proposal is closed.' : r.error === 'not_found' ? 'No open BackX Proposal.' : `Could not signal (${r.error}).`);
+    if (r.error) return fail(r.error === 'already_signalled' ? 'This account has already signalled on this proposal. A signal is final.' : r.error === 'closed' ? 'This proposal is closed.' : r.error === 'not_found' ? 'No open BackX Proposal.' : `Could not signal (${r.error}).`);
     return text({ signalled: choice, code: r.proposal.code, yesPct: r.proposal.yesPct, noPct: r.proposal.noPct });
   }));
 
