@@ -34,7 +34,7 @@ app.backx.trade/sign     ─ the user signs prepared steps after the API's own c
 | `/health` | `{ ok }` only |
 
 Tools: `backx_status`, `markets_list`, `account_get`, `rewards_get`, `positions_list`, `prepare_open`,
-`prepare_close`, `prepare_issue`, `prepare_withdraw`, `prepare_stake`, `prepare_unstake`, `prepare_claim_all`.
+`prepare_close`, `prepare_issue`, `prepare_withdraw`, `prepare_stake`, `prepare_unstake`, `prepare_claim_all`, `proposal_get`, `proposal_signal` (BackX Validator Proposals, Yes/No for the user's own account; scope `proposal:signal`, internal ops `proposal` and `proposal_signal`).
 
 ## Environment
 

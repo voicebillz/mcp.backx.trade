@@ -4,6 +4,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { encodeFunctionData, formatUnits } from 'viem';
 import { ABI, addressBook, chainInfo, client, hasCode, markets, market, openedIds } from './chain.js';
 import { config } from './config.js';
+import { internalOp } from './api.js';
 
 // The tools a connected assistant gets. Every tool works on the signed-in user's own wallet only (from the token,
 // never from the assistant's input). "prepare_*" tools build transactions and hand back a link where the user
@@ -292,6 +293,26 @@ export function buildServer(auth, redis) {
     if (!calls.length) return text(`Nothing to claim on ${c.name}.`);
     return bundle(redis, auth, c, 'Claim all', [{ label: `Claim ${calls.length} reward(s) to your wallet`, to: MULTICALL3,
       data: encodeFunctionData({ abi: ABI.multicall, functionName: 'aggregate3', args: [calls] }) }]);
+  }));
+
+  // BackX Proposals (owner 2026-11-04): community questions answered Yes or No, for this user's own account.
+  // The API counts one signal per account; it can be changed while the proposal is open. Shows percent, never totals.
+  server.registerTool('proposal_get', {
+    title: 'BackX Proposal', description: 'The current BackX Proposal (BXP-n): title, text, the Yes/No question, the split in percent, and this user\'s own signal.',
+    inputSchema: { id: z.number().int().min(1).optional().describe('BXP number; omit for the latest') },
+  }, guard('account:read', auth, async ({ id }) => {
+    const r = await internalOp('proposal', { sub: auth.sub, id: id ?? null });
+    if (!r.proposal) return text('No BackX Proposal is open right now.');
+    return text({ ...r.proposal, page: `https://www.backx.trade/proposal?bxp=${r.proposal.id}` });
+  }));
+
+  server.registerTool('proposal_signal', {
+    title: 'Signal on a BackX Proposal', description: 'Signal Yes or No on a BackX Proposal for the user\'s own account. Only do this when the user clearly told you which answer they want. One signal per account, changeable while the proposal is open.',
+    inputSchema: { choice: z.enum(['yes', 'no']), id: z.number().int().min(1).optional().describe('BXP number; omit for the latest open one') },
+  }, guard('proposal:signal', auth, async ({ choice, id }) => {
+    const r = await internalOp('proposal_signal', { sub: auth.sub, id: id ?? null, choice });
+    if (r.error) return fail(r.error === 'closed' ? 'This proposal is closed.' : r.error === 'not_found' ? 'No open BackX Proposal.' : `Could not signal (${r.error}).`);
+    return text({ signalled: choice, code: r.proposal.code, yesPct: r.proposal.yesPct, noPct: r.proposal.noPct });
   }));
 
   return server;

@@ -18,6 +18,20 @@ export async function internal(op, body) {
   return r.json();
 }
 
+/** Like internal(), but hands back the API's error code ({ error }) instead of throwing on 4xx. */
+export async function internalOp(op, body) {
+  const payload = Buffer.from(JSON.stringify({ op, ...body, ts: Date.now(), nonce: randomBytes(16).toString('hex') }));
+  const r = await fetch(`${config.apiUrl}/internal/mcp/${op}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-mcp-sig': signBody(payload) },
+    body: payload,
+    signal: AbortSignal.timeout(8000),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (r.status >= 500) throw new Error(`api ${op} ${r.status}`);
+  return r.ok ? j : { error: j.error || `http_${r.status}` };
+}
+
 /**
  * Has BackX paused MCP (admin switch on api.backx.trade)? Asked at most every 15 s. If the API cannot be reached the
  * last answer (kept 1 h) is used, and with no answer at all we treat it as paused: fail closed.

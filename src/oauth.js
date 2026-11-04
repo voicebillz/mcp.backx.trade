@@ -10,7 +10,7 @@ import { account } from './api.js';
 // logs in with a social method (owner 2026-10-26: external-wallet accounts cannot connect). Tokens are stored as
 // SHA-256 hashes, never in clear.
 
-export const SCOPES = ['account:read', 'trade:prepare', 'issue:prepare', 'stake:prepare', 'claim:prepare'];
+export const SCOPES = ['account:read', 'trade:prepare', 'issue:prepare', 'stake:prepare', 'claim:prepare', 'proposal:signal'];
 const ACCESS_TTL = 15 * 60;
 const REFRESH_TTL = 30 * 86400;
 const sha = (s) => createHash('sha256').update(s).digest('hex');
